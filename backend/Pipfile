@@ -15,6 +15,9 @@ fastapi = "*"
 pyjwt = "*"
 sqlalchemy = "*"
 pydantic = {version = "*", extras = ["email"]}
+psycopg2 = "*"
+passlib = {extras = ["bcrypt"], version = "*"}
+python-jose = {extras = ["cryptography"], version = "*"}
 
 [requires]
 python_version = "3.11"
