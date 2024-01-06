@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from database import models
-from database.db_setup import SessionLocal, engine
+from database.db_setup import engine
 from api.v1.endpoints import router as v1_router
 
 models.Base.metadata.create_all(bind=engine)

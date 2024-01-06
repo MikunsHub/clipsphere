@@ -24,7 +24,7 @@ quick-test:
 	set -a && . ./env.local && pipenv run test ${ISOLATED_TEST}
 
 auto-format:
-	pipenv run ruff
 	pipenv run ruff-fix
 	pipenv run ruff-format
+	pipenv run ruff
 

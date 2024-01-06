@@ -6,12 +6,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 url = URL.create(
-    drivername=DATABASE_DRIVER,
-    username=PG_USER,
-    password=PG_PASSWORD,
-    host=PG_HOST,
-    database=PG_NAME,
-    port=PG_PORT # type: ignore
+	drivername=DATABASE_DRIVER,
+	username=PG_USER,
+	password=PG_PASSWORD,
+	host=PG_HOST,
+	database=PG_NAME,
+	port=PG_PORT,  # type: ignore
 )
 
 engine = create_engine(url)
@@ -20,8 +20,8 @@ Base = declarative_base()
 
 
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+	db = SessionLocal()
+	try:
+		yield db
+	finally:
+		db.close()
