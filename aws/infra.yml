@@ -1,4 +1,4 @@
-Description: CloudFormation template for setting up VPC with public and private subnets, and RDS instance in the private subnet
+Description: CloudFormation template for setting up VPC with public and private subnets.
 
 Parameters:
   VpcCIDR:
