@@ -5,6 +5,16 @@ Parameters:
     Description: CIDR block for the VPC
     Type: String
     Default: 10.0.0.0/16
+  
+  POSTGRES_USER:
+    Description: Username for the Postgres instance master user
+    Type: String
+    NoEcho: true
+  
+  POSTGRES_PASSWORD:
+    Description: Password for the Postgres master user
+    Type: String
+    NoEcho: true
 
 Resources:
   VPC:
@@ -26,6 +36,13 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.2.0/24
+  
+  RDSSubnetGroup:
+  Type: AWS::RDS::DBSubnetGroup
+  Properties:
+    DBSubnetGroupName: RDSSubnetGroup
+    SubnetIds:
+      - !Ref PrivateSubnet
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -85,7 +102,40 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnet
+  
+  RDSEndpointService:
+    Type: AWS::EC2::VPCEndpointService
+    Properties:
+      ServiceName: !Join [ ".", ["com.amazonaws.", !Ref AWS::Region, ".rds"] ]
+      VpcId: !Ref VPC
+      AcceptanceRequired: false
 
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: RDSSecurityGroup
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - FromPort: 5432
+          IpProtocol: tcp
+          CidrBlock: !GetAtt RDSEndpointService.Outputs.DnsName
+          ToPort: 5432
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: 20 
+      DBInstanceClass: db.t2.micro
+      DBInstanceIdentifier: MainPostgresInstance
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      Engine: postgres
+      EngineVersion: "14.0"
+      MasterUsername: !Ref POSTGRES_USER
+      MasterUserPassword: !Ref POSTGRES_PASSWORD
+      Port: 5432
+      PubliclyAccessible: no 
+      SecurityGroups:
+        - !Ref RDSSecurityGroup
 
 Outputs:
   VpcId:
@@ -97,3 +147,9 @@ Outputs:
   PrivateSubnetId:
     Description: Private Subnet ID
     Value: !Ref PrivateSubnet
+  RDSInstanceEndpoint:
+    Description: The DNS name of the RDS instance endpoint
+    Value: !GetAtt RDSInstance.Endpoint.Address
+  RDSInstanceIdentifier:
+    Description: The identifier for the RDS instance
+    Value: !Ref RDSInstance
