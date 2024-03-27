@@ -1,4 +1,4 @@
-COMPOSE_FILE=tests/docker-compose.yml
+COMPOSE_FILE=docker-compose.yml
 
 include env.local
 
