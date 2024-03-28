@@ -130,3 +130,16 @@ dmypy.json
 
 # Postgres container volume
 pgdata
+
+**__pycache__**
+**.egg-info
+**_archive**
+logs/**
+**dev_dump.sql**
+
+# IDE / Editor
+.idea
+.vscode**
+
+# macOS
+.DS_Store

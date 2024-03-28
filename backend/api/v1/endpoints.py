@@ -1,7 +1,14 @@
 from datetime import timedelta
 from api.v1.schemas import UserBase, UserCreate, Token, UserSignin
 from api.v1.helpers import hash_password, authenticate_user, create_access_token
-from api.v1.constants import ACCESS_TOKEN_EXPIRE_MINUTES, CONFLICT_STATUS_CODE, NOT_FOUND_STATUS_CODE, SUB, WWW_AUTHENTICATE, Bearer
+from api.v1.constants import (
+	ACCESS_TOKEN_EXPIRE_MINUTES,
+	CONFLICT_STATUS_CODE,
+	NOT_FOUND_STATUS_CODE,
+	SUB,
+	WWW_AUTHENTICATE,
+	Bearer,
+)
 from database.db_setup import get_db
 from database.queries import create_user, get_user_by_email
 from fastapi import APIRouter, Depends, HTTPException, status

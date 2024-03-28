@@ -15,6 +15,10 @@ fastapi = "*"
 psycopg2-binary = "*"
 sqlalchemy = "*"
 pydantic = {version = "*", extras = ["email"]}
+pyjwt = "*"
+passlib = {extras = ["bcrypt"], version = "*"}
+bcrypt = "*"
+alembic = "*"
 
 [requires]
 python_version = "3.11"
@@ -22,6 +26,10 @@ python_version = "3.11"
 [scripts]
 main = "uvicorn app.main:app --host 0.0.0.0 --port 8080"
 dev = "uvicorn main:app --reload"
+revision = "alembic revision -m"
+head = "alembic upgrade head"
+upgrade = "alembic upgrade +1"
+downgrade = "alembic downgrade -1"
 test = "pytest -vvs"
 type-check = "mypy . --ignore-missing-imports"
 lint = "flake8 . --exclude ./.aws-sam/ --max-line-length=120 --ignore=E731,W503"

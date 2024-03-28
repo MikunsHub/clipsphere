@@ -1,7 +1,8 @@
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-ACCESS_TOKEN= 'access_token'
+ACCESS_TOKEN = 'access_token'
 Bearer = 'Bearer'
 WWW_AUTHENTICATE = 'WWW-Authenticate'
-SUB= 'sub'
+SUB = 'sub'
 NOT_FOUND_STATUS_CODE = 404
 CONFLICT_STATUS_CODE = 409
+EXP = 'exp'

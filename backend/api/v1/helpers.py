@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Union
-from jose import jwt
+import jwt
+from api.v1.constants import EXP
 from env import ALGORITHM, SECRET_KEY
 from database.queries import get_user_by_email
 from passlib.context import CryptContext
@@ -31,6 +32,6 @@ def create_access_token(*, data: dict, expires_delta: Union[timedelta, None] = N
 		expire = datetime.utcnow() + expires_delta
 	else:
 		expire = datetime.utcnow() + timedelta(minutes=15)
-	to_encode.update({'exp': expire})
+	to_encode.update({EXP: expire})
 	encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 	return encoded_jwt
