@@ -14,6 +14,15 @@ docker-respawn:
 make run-local:
 	set -a && . ./env.local && pipenv run dev
 
+migrate:
+	set -a	&& . ./env.local && pipenv run head
+
+upgrade:
+	set -a	&& . ./env.local && pipenv run upgrade
+
+downgrade:
+	set -a	&& . ./env.local && pipenv run downgrade
+
 test:
 	pipenv run lint
 	pipenv run type-check
