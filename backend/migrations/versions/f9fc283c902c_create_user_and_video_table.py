@@ -1,14 +1,14 @@
 """create user and video table
 
 Revision ID: f9fc283c902c
-Revises: 
+Revises:
 Create Date: 2024-03-28 10:47:03.650979
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
@@ -19,10 +19,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("""
+	op.execute("""
     CREATE TABLE users (
         id SERIAL PRIMARY KEY,
         email VARCHAR UNIQUE NOT NULL,
+        username VARCHAR UNIQUE,
         password VARCHAR NOT NULL,
         is_active BOOLEAN DEFAULT FALSE,
         is_superuser BOOLEAN DEFAULT FALSE,
@@ -32,7 +33,7 @@ def upgrade() -> None:
     )
     """)
 
-    op.execute("""
+	op.execute("""
     CREATE TABLE videos (
         id SERIAL PRIMARY KEY,
         title VARCHAR,
@@ -49,5 +50,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.execute("DROP TABLE videos")
-    op.execute("DROP TABLE users")
+	op.execute('DROP TABLE videos')
+	op.execute('DROP TABLE users')

@@ -22,6 +22,7 @@ class Users(Base):
 
 	id = Column(Integer, primary_key=True, index=True)
 	email = Column(String, unique=True, index=True)
+	username = Column(String, unique=True, index=True)
 	password = Column(String)
 	is_active = Column(Boolean, default=False)
 	is_superuser = Column(Boolean, default=False)
@@ -46,4 +47,4 @@ class Video(Base):
 	processed_url = Column(String, index=True)
 	user_id = Column(Integer, ForeignKey('users.id'))
 
-	user = relationship('User', back_populates='videos')
+	user = relationship('Users', back_populates='videos')

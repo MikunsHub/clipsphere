@@ -143,3 +143,5 @@ logs/**
 
 # macOS
 .DS_Store
+# ruff
+.ruff_cache/

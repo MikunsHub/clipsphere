@@ -9,9 +9,11 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
 	email: EmailStr
+	username: str
 	lastname: str
 	firstname: str
 	password: str
+	confirm_password: str
 
 
 class UserSignin(BaseModel):
