@@ -19,6 +19,7 @@ pyjwt = "*"
 passlib = {extras = ["bcrypt"], version = "*"}
 bcrypt = "*"
 alembic = "*"
+python-multipart = "*"
 
 [requires]
 python_version = "3.11"
