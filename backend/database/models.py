@@ -31,6 +31,25 @@ class Users(Base):
 	channel_name = Column(String, index=True)
 
 	videos = relationship('Video', back_populates='user')
+	subscriptions = relationship('Channels', secondary='subscriptions')
+
+
+class Channels(Base):
+	__tablename__ = 'channels'
+
+	id = Column(Integer, primary_key=True, index=True)
+	channel_name = Column(String, index=True)
+	channel_description = Column(String, index=True)
+	channel_owner = Column(Integer, ForeignKey('users.id'))
+
+	subscribers = relationship('Users', secondary='subscriptions')
+
+
+class Subscription(Base):
+	__tablename__ = 'subscriptions'
+
+	user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
+	channel_id = Column(Integer, ForeignKey('channels.id'), primary_key=True)
 
 
 class Video(Base):
@@ -48,3 +67,11 @@ class Video(Base):
 	user_id = Column(Integer, ForeignKey('users.id'))
 
 	user = relationship('Users', back_populates='videos')
+
+
+class UserSubscription(Base):
+	__tablename__ = 'user_subscriptions'
+
+	id = Column(Integer, primary_key=True)
+	user_id = Column(Integer, ForeignKey('users.id'))
+	channel_id = Column(Integer, ForeignKey('users.id'))
