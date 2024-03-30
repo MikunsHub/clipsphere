@@ -11,8 +11,9 @@ from jwt.exceptions import PyJWTError
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
+
 class UserData(NamedTuple):
-    email: str
+	email: str
 
 
 def verify_password(plain_password, hashed_password) -> bool:
@@ -44,15 +45,15 @@ def create_access_token(*, data: dict, expires_delta: Union[timedelta, None] = N
 
 
 def get_current_user(token: HTTPAuthorizationCredentials):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='Could not validate credentials',
-    )
-    try:
-        decoded_token = jwt.decode(token.credentials, SECRET_KEY, algorithms=[ALGORITHM])
-        user = UserData(
-            email=decoded_token[SUB],
-        )
-        return user
-    except (PyJWTError, KeyError) as e:
-        raise credentials_exception from e
+	credentials_exception = HTTPException(
+		status_code=status.HTTP_401_UNAUTHORIZED,
+		detail='Could not validate credentials',
+	)
+	try:
+		decoded_token = jwt.decode(token.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+		user = UserData(
+			email=decoded_token[SUB],
+		)
+		return user
+	except (PyJWTError, KeyError) as e:
+		raise credentials_exception from e
