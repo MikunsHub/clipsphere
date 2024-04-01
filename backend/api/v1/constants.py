@@ -1,7 +1,9 @@
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 ACCESS_TOKEN = 'access_token'
 Bearer = 'Bearer'
-SUB = 'sub'
+EMAIL = 'email'
+ID = 'id'
+USERNAME = 'username'
 NOT_FOUND_STATUS_CODE = 404
 CONFLICT_STATUS_CODE = 409
 EXP = 'exp'
