@@ -19,7 +19,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-	op.execute("""
+	sql = """
+    CREATE TYPE public.video_quality_type AS ENUM (
+        '240p',
+        '360p',
+        '480p',
+        '720p',
+        '1080p',
+        '4K'
+    );
+
     CREATE TABLE users (
         id SERIAL PRIMARY KEY,
         email VARCHAR UNIQUE NOT NULL,
@@ -28,12 +37,22 @@ def upgrade() -> None:
         is_active BOOLEAN DEFAULT FALSE,
         is_superuser BOOLEAN DEFAULT FALSE,
         firstname VARCHAR,
-        lastname VARCHAR,
-        channel_name VARCHAR
-    )
-    """)
+        lastname VARCHAR
+    );
 
-	op.execute("""
+    CREATE TABLE channels (
+        id SERIAL PRIMARY KEY,
+        channel_name VARCHAR,
+        channel_description VARCHAR,
+        channel_owner INTEGER REFERENCES users(id)
+    );
+    
+    CREATE TABLE subscriptions (
+        user_id INTEGER REFERENCES users(id),
+        channel_id INTEGER REFERENCES channels(id),
+        PRIMARY KEY (user_id, channel_id)
+    );
+            
     CREATE TABLE videos (
         id SERIAL PRIMARY KEY,
         title VARCHAR,
@@ -41,14 +60,25 @@ def upgrade() -> None:
         upload_date TIMESTAMP,
         view_count INTEGER DEFAULT 0,
         like_count INTEGER DEFAULT 0,
-        quality VARCHAR,
+        quality public.video_quality_type NOT NULL,
         raw_url VARCHAR,
         processed_url VARCHAR,
-        user_id INTEGER REFERENCES users(id)
-    )
-    """)
+        channel_id INTEGER REFERENCES channels(id)
+    );
+    """
+	op.execute(sql)
 
 
 def downgrade() -> None:
-	op.execute('DROP TABLE videos')
-	op.execute('DROP TABLE users')
+	sql = """
+    DROP TABLE videos;
+
+    DROP TABLE subscriptions;
+
+    DROP TABLE channels;
+
+    DROP TABLE users;
+
+    DROP TYPE public.video_quality_type;
+    """
+	op.execute(sql)

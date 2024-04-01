@@ -28,9 +28,7 @@ class Users(Base):
 	is_superuser = Column(Boolean, default=False)
 	firstname = Column(String, index=True)
 	lastname = Column(String, index=True)
-	channel_name = Column(String, index=True)
 
-	videos = relationship('Video', back_populates='user')
 	subscriptions = relationship('Channels', secondary='subscriptions')
 
 
@@ -43,6 +41,7 @@ class Channels(Base):
 	channel_owner = Column(Integer, ForeignKey('users.id'))
 
 	subscribers = relationship('Users', secondary='subscriptions')
+	videos = relationship('Video', back_populates='channel')
 
 
 class Subscription(Base):
@@ -64,14 +63,6 @@ class Video(Base):
 	quality = Column(ENUM(*[x.value for x in VideoQuality], name='video_quality_type'), default=VideoQuality.p360.value)  # type: ignore
 	raw_url = Column(String, index=True)
 	processed_url = Column(String, index=True)
-	user_id = Column(Integer, ForeignKey('users.id'))
+	channel_id = Column(Integer, ForeignKey('channels.id'))
 
-	user = relationship('Users', back_populates='videos')
-
-
-class UserSubscription(Base):
-	__tablename__ = 'user_subscriptions'
-
-	id = Column(Integer, primary_key=True)
-	user_id = Column(Integer, ForeignKey('users.id'))
-	channel_id = Column(Integer, ForeignKey('users.id'))
+	channel = relationship('Channels', back_populates='videos')

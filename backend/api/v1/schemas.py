@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional, Union
 from pydantic import BaseModel
 from pydantic import EmailStr
 
@@ -16,9 +16,10 @@ class UserCreate(UserBase):
 	confirm_password: str
 
 
-class UserSignin(BaseModel):
+class UserData(BaseModel):
+	id: int
 	email: EmailStr
-	password: str
+	username: str
 
 
 class Token(BaseModel):
@@ -27,3 +28,18 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
 	username: Union[str, None] = None
+
+
+class ChannelData(BaseModel):
+	channel_name: str
+	description: str
+	channel_owner: int
+
+
+class SubscribePayload(BaseModel):
+	channel_id: int
+
+
+class SuccessPayload(BaseModel):
+	message: str
+	data: Optional[dict] = None
