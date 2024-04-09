@@ -9,7 +9,7 @@ from api.v1.constants import ACCESS_TOKEN_EXPIRE_MINUTES, CONFLICT_STATUS_CODE, 
 from api.v1.helpers import authenticate_user, create_access_token, decode_token, hash_password
 from api.v1.schemas import ChannelData, SubscribePayload, SuccessPayload, Token, UserBase, UserCreate, UserData
 from database.db_setup import get_db
-from database.queries import add_subscription, create_channel, create_user, get_channel, get_subscription, get_user
+from database.queries import add_subscription, create_channel, create_user, get_channel, get_subscription, get_user, remove_subscription
 
 router = APIRouter()
 
@@ -41,7 +41,7 @@ def signup(user_data: UserCreate, db: Session = Depends(get_db)):
 	return signedup_user
 
 
-@router.post('/token', response_model=Token)
+@router.post('/api/auth/token', response_model=Token)
 async def token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
 	user = authenticate_user(db, form_data.username, form_data.password)
 
@@ -67,7 +67,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 
 @router.post('/api/subscription/subscribe', response_model=SuccessPayload)
-def user_subscribe_to_channel(
+def user_subscribes_to_channel(
 	request_data: SubscribePayload, db: Session = Depends(get_db), current_user: UserData = Depends(get_current_user)
 ):
 	channel = get_channel(db, request_data.channel_id)
@@ -80,3 +80,19 @@ def user_subscribe_to_channel(
 		)
 	add_subscription(db, current_user.id, channel.id)
 	return SuccessPayload(message='User successfully subscribed')
+
+
+@router.post('/api/subscription/unsubscribe', response_model=SuccessPayload)
+def user_unsubscribes_to_channel(
+	request_data: SubscribePayload, db: Session = Depends(get_db), current_user: UserData = Depends(get_current_user)
+):
+	channel = get_channel(db, request_data.channel_id)
+	if not channel:
+		raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'error': 'Channel not found'})
+	subcription = get_subscription(db, current_user.id, channel.id)
+	if not subcription:
+		raise HTTPException(
+			status_code=status.HTTP_403_FORBIDDEN, detail={'error': 'User not subscribed to this channel'}
+		)
+	remove_subscription(db, current_user.id, channel.id)
+	return SuccessPayload(message='User successfully unsubscribed')

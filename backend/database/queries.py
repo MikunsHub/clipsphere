@@ -49,3 +49,9 @@ def add_subscription(db: Session, user_id: int, channel_id: int):
 	db.commit()
 	db.refresh(db_subcription)
 	return db_subcription
+
+
+def remove_subscription(db: Session, user_id: int, channel_id: int):
+	subscription = (db.query(Subscription).filter_by(user_id=user_id, channel_id=channel_id).first())
+	db.delete(subscription)
+	db.commit()
