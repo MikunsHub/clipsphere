@@ -6,15 +6,13 @@ Parameters:
     Type: String
     Default: 10.0.0.0/16
   
-  POSTGRES_USER:
-    Description: Username for the Postgres instance master user
-    Type: String
-    NoEcho: true
-  
-  POSTGRES_PASSWORD:
-    Description: Password for the Postgres master user
-    Type: String
-    NoEcho: true
+  AvailabilityZone1:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: Choose the Availability Zone for the subnet
+
+  AvailabilityZone2:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: Choose the Availability Zone for the subnet
 
 Resources:
   VPC:
@@ -23,6 +21,9 @@ Resources:
       CidrBlock: !Ref VpcCIDR
       EnableDnsSupport: true
       EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: clipsphere_vpc
 
   PublicSubnet:
     Type: AWS::EC2::Subnet
@@ -30,19 +31,31 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: 10.0.1.0/24
       MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: PublicSubnet
 
   PrivateSubnet:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.2.0/24
-  
-  RDSSubnetGroup:
-  Type: AWS::RDS::DBSubnetGroup
-  Properties:
-    DBSubnetGroupName: RDSSubnetGroup
-    SubnetIds:
-      - !Ref PrivateSubnet
+      AvailabilityZone: !Ref AvailabilityZone1
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: PrivateSubnet1
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.6.0/24
+      AvailabilityZone: !Ref AvailabilityZone2
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: PrivateSubnet2
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -52,18 +65,6 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
-  
-  NatGatewayEIP:
-    Type: AWS::EC2::EIP
-    DependsOn: AttachGateway
-    Properties:
-      Domain: vpc
-  
-  NatGateway:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt NatGatewayEIP.AllocationId
-      SubnetId: !Ref PublicSubnet
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -88,54 +89,19 @@ Resources:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
-
-  PrivateRoute:
-    Type: AWS::EC2::Route
-    DependsOn: AttachGateway
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NatGateway
   
   PrivateSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnet
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet2
   
-  RDSEndpointService:
-    Type: AWS::EC2::VPCEndpointService
-    Properties:
-      ServiceName: !Join [ ".", ["com.amazonaws.", !Ref AWS::Region, ".rds"] ]
-      VpcId: !Ref VPC
-      AcceptanceRequired: false
-
-  RDSSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: RDSSecurityGroup
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - FromPort: 5432
-          IpProtocol: tcp
-          CidrBlock: !GetAtt RDSEndpointService.Outputs.DnsName
-          ToPort: 5432
-
-  RDSInstance:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      AllocatedStorage: 20 
-      DBInstanceClass: db.t2.micro
-      DBInstanceIdentifier: MainPostgresInstance
-      DBSubnetGroupName: !Ref RDSSubnetGroup
-      Engine: postgres
-      EngineVersion: "14.0"
-      MasterUsername: !Ref POSTGRES_USER
-      MasterUserPassword: !Ref POSTGRES_PASSWORD
-      Port: 5432
-      PubliclyAccessible: no 
-      SecurityGroups:
-        - !Ref RDSSecurityGroup
 
 Outputs:
   VpcId:
@@ -147,9 +113,3 @@ Outputs:
   PrivateSubnetId:
     Description: Private Subnet ID
     Value: !Ref PrivateSubnet
-  RDSInstanceEndpoint:
-    Description: The DNS name of the RDS instance endpoint
-    Value: !GetAtt RDSInstance.Endpoint.Address
-  RDSInstanceIdentifier:
-    Description: The identifier for the RDS instance
-    Value: !Ref RDSInstance
