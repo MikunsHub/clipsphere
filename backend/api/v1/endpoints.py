@@ -9,7 +9,15 @@ from api.v1.constants import ACCESS_TOKEN_EXPIRE_MINUTES, CONFLICT_STATUS_CODE, 
 from api.v1.helpers import authenticate_user, create_access_token, decode_token, hash_password
 from api.v1.schemas import ChannelData, SubscribePayload, SuccessPayload, Token, UserBase, UserCreate, UserData
 from database.db_setup import get_db
-from database.queries import add_subscription, create_channel, create_user, get_channel, get_subscription, get_user, remove_subscription
+from database.queries import (
+	add_subscription,
+	create_channel,
+	create_user,
+	get_channel,
+	get_subscription,
+	get_user,
+	remove_subscription,
+)
 
 router = APIRouter()
 

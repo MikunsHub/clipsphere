@@ -11,6 +11,8 @@ ruff = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 
 [packages]
+boto3 = "*"
+rich = "*"
 fastapi = "*"
 psycopg2-binary = "*"
 sqlalchemy = "*"
