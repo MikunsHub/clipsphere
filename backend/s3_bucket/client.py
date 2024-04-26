@@ -4,65 +4,82 @@ from env import LOCAL, LOCALSTACK_ENDPOINT_URL
 
 
 class S3Interface:
-	"""An interface for interacting with S3, handling LocalStack and real environments."""
-
 	def __init__(self):
 		self.s3_client = self._create_s3_client()
 
 	def _create_s3_client(self):
-		"""Creates an S3 client, configured for LocalStack if running locally."""
 		if LOCAL:
 			return boto3.client('s3', endpoint_url=LOCALSTACK_ENDPOINT_URL)
 		return boto3.client('s3')
 
-	def upload_video(self, bucket_name, file_path, object_key):
-		"""Uploads a video to S3.
-
-		Args:
-		    bucket_name (str): The name of the S3 bucket.
-		    file_path (str): The path to the local video file.
-		    object_key (str): The key (name) of the object in S3.
-
-		Raises:
-		    ClientError: Any botocore client errors encountered.
-		"""
-		with open(file_path, 'rb') as f:
-			try:
-				self.s3_client.upload_fileobj(f, bucket_name, object_key)
-			except ClientError as error:
-				raise error from None  # Raise the error with proper traceback
-
-	def download_video(self, bucket_name, object_key, destination_path):
-		# TODO: fix this
-		"""Downloads a video from S3.
-
-		Args:
-		    bucket_name (str): The name of the S3 bucket.
-		    object_key (str): The key (name) of the object in S3.
-		    destination_path (str): The path to save the downloaded video locally.
-
-		Raises:
-		    ClientError: Any botocore client errors encountered.
-		"""
+	def generate_presigned_url(self, bucket_name, object_key, expiration):
 		try:
-			self.s3_client.download_file(bucket_name, object_key, destination_path)
+			url = self.s3_client.generate_presigned_url(
+				'get_object', Params={'Bucket': bucket_name, 'Key': object_key}, ExpiresIn=expiration
+			)
+			return url
 		except ClientError as error:
-			raise error from None  # Raise the error with proper traceback
+			raise error from None
 
-	def list_objects(self, bucket_name) -> dict:
-		"""Lists objects in an S3 bucket.
+	def _initiate_multipart_upload(self, bucket_name, object_key):
+		response = self.s3_client.create_multipart_upload(Bucket=bucket_name, Key=object_key)
+		return response['UploadId']
 
-		Args:
-		    bucket_name (str): The name of the S3 bucket.
-
-		Returns:
-		    dict: The response from the `list_objects` operation.
-
-		Raises:
-		    ClientError: Any botocore client errors encountered.
-		"""
+	def _upload_parts(self, bucket_name, file_obj, upload_id, object_key):
 		try:
-			response = self.s3_client.list_objects(Bucket=bucket_name)
-			return response
+			part_number = 1
+			uploaded_parts = []
+
+			while True:
+				# Read a part of the file
+				part_data = file_obj.read(10000000)
+				if not part_data:
+					break
+
+				# Upload the part
+				response = self.s3_client.upload_part(
+					Bucket=bucket_name,
+					Key=object_key,
+					PartNumber=part_number,
+					UploadId=upload_id,
+					Body=part_data,
+				)
+				# Keep track of the uploaded part
+				uploaded_part = {'PartNumber': part_number, 'ETag': response['ETag']}
+				uploaded_parts.append(uploaded_part)
+
+				# Increment part number for the next part
+				part_number += 1
+
+				# Reset part_number to 1 if it exceeds 10000
+				if part_number > 10000:
+					part_number = 1
+
+			return uploaded_parts
+
 		except ClientError as error:
-			raise error from None  # Raise the error with proper traceback
+			# Handle errors
+			raise error from None
+
+	def _complete_multipart_upload(self, bucket_name, upload_id, object_key, uploaded_parts):
+		try:
+			self.s3_client.complete_multipart_upload(
+				Bucket=bucket_name, Key=object_key, UploadId=upload_id, MultipartUpload={'Parts': uploaded_parts}
+			)
+		except ClientError as error:
+			self.s3_client.abort_multipart_upload(Bucket=bucket_name, Key=object_key, UploadId=upload_id)
+			raise error from None
+
+	def small_file_upload(self, bucket_name, file_obj, object_key):
+		try:
+			self.s3_client.upload_fileobj(file_obj, bucket_name, object_key)
+		except ClientError as error:
+			raise error from None
+
+	def large_file_upload(self, bucket_name, file_obj, object_key):
+		try:
+			upload_id = self._initiate_multipart_upload(bucket_name, object_key)
+			uploaded_parts = self._upload_parts(bucket_name, file_obj, upload_id, object_key)
+			self._complete_multipart_upload(bucket_name, upload_id, object_key, uploaded_parts)
+		except ClientError as error:
+			raise error from None
