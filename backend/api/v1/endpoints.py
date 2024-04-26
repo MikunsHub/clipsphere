@@ -5,12 +5,23 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt import PyJWTError
 from sqlalchemy.orm import Session
 
-from api.v1.constants import ACCESS_TOKEN_EXPIRE_MINUTES, CONFLICT_STATUS_CODE, EMAIL, USERNAME, ID
-from api.v1.helpers import authenticate_user, create_access_token, decode_token, hash_password
-from api.v1.schemas import ChannelData, SubscribePayload, SuccessPayload, Token, UserBase, UserCreate, UserData
+from api.v1.constants import ACCESS_TOKEN_EXPIRE_MINUTES, CONFLICT_STATUS_CODE, EMAIL, ID, USERNAME
+from api.v1.helpers import authenticate_user, create_access_token, decode_token, generate_object_key, hash_password
+from api.v1.schemas import (
+	ChannelData,
+	SubscribePayload,
+	SuccessPayload,
+	Token,
+	UserBase,
+	UserCreate,
+	UserData,
+	VideoMetadata,
+	VideoUploadPayload,
+)
 from database.db_setup import get_db
 from database.queries import (
 	add_subscription,
+	add_video_metadata,
 	create_channel,
 	create_user,
 	get_channel,
@@ -18,10 +29,12 @@ from database.queries import (
 	get_user,
 	remove_subscription,
 )
+from env import AWS_S3_RAW_VIDEOS_BUCKET_NAME, TOKEN_URL
+from s3_bucket.client import S3Interface
 
 router = APIRouter()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
 
 
 @router.get('/')
@@ -104,3 +117,25 @@ def user_unsubscribes_to_channel(
 		)
 	remove_subscription(db, current_user.id, channel.id)
 	return SuccessPayload(message='User successfully unsubscribed')
+
+
+@router.post('/api/videos/upload', response_model=SuccessPayload)
+async def user_gets_presigned_url_and_saves_video_metadata(
+	request_body: VideoUploadPayload,
+	db: Session = Depends(get_db),
+	current_user: UserData = Depends(get_current_user),
+):
+	channel = get_channel(db, request_body.channel_id)
+	if not channel:
+		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Channel not found')
+
+	try:
+		s3_client = S3Interface()
+		object_key = generate_object_key(request_body)
+		presigned_url = s3_client.generate_presigned_url(AWS_S3_RAW_VIDEOS_BUCKET_NAME, object_key, 86400)
+		vid_metadata = VideoMetadata(**request_body.__dict__, raw_url=presigned_url)
+		add_video_metadata(db, vid_metadata)
+	except Exception:
+		raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Failed to upload video')
+
+	return SuccessPayload(message='Video uploaded successfully!', data={'url': presigned_url, 'object_key': object_key})

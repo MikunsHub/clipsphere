@@ -13,3 +13,5 @@ SECRET_KEY = environ['SECRET_KEY']  # use makefile to fill this at runtime
 ALGORITHM = environ['ALGORITHM']  # use makefile to fill this at runtime
 
 AWS_S3_RAW_VIDEOS_BUCKET_NAME = environ['AWS_S3_RAW_VIDEOS_BUCKET_NAME']
+
+TOKEN_URL = environ['TOKEN_URL']

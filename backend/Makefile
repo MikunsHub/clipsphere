@@ -4,6 +4,8 @@ include env.local
 
 docker-run:
 	docker-compose -f ${COMPOSE_FILE} up -d
+	sleep 3
+	awslocal s3api create-bucket --bucket raw-videos-storage-bucket
 
 docker-clean:
 	docker-compose -f ${COMPOSE_FILE} down
