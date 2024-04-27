@@ -145,3 +145,5 @@ logs/**
 .DS_Store
 # ruff
 .ruff_cache/
+
+shared
