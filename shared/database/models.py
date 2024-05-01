@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import DateTime
 
-from database.db_setup import Base
+from shared.database.db_setup import Base
 
 
 class VideoQuality(Enum):

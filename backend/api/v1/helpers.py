@@ -4,7 +4,7 @@ import jwt
 from api.v1.constants import EXP
 from api.v1.schemas import VideoUploadPayload
 from env import ALGORITHM, SECRET_KEY
-from database.queries import get_user
+from shared.database.queries import get_user
 from passlib.context import CryptContext
 import uuid
 

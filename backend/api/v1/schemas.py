@@ -2,7 +2,7 @@ from typing import Optional, Union
 from pydantic import BaseModel
 from pydantic import EmailStr
 
-from database.models import VideoFormat
+from shared.database.models import VideoFormat
 
 
 class UserBase(BaseModel):

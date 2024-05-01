@@ -1,10 +1,5 @@
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jwt import PyJWTError
-from sqlalchemy.orm import Session
-
 from api.v1.constants import ACCESS_TOKEN_EXPIRE_MINUTES, CONFLICT_STATUS_CODE, EMAIL, ID, USERNAME
 from api.v1.helpers import authenticate_user, create_access_token, decode_token, generate_object_key, hash_password
 from api.v1.schemas import (
@@ -18,8 +13,8 @@ from api.v1.schemas import (
 	VideoMetadata,
 	VideoUploadPayload,
 )
-from database.db_setup import get_db
-from database.queries import (
+from shared.database.db_setup import get_db
+from shared.database.queries import (
 	add_subscription,
 	add_video_metadata,
 	create_channel,
@@ -29,8 +24,13 @@ from database.queries import (
 	get_user,
 	remove_subscription,
 )
-from env import AWS_S3_RAW_VIDEOS_BUCKET_NAME, TOKEN_URL
-from s3_bucket.client import S3Interface
+from env import AWS_S3_RAW_VIDEOS_BUCKET_NAME, LOCAL, LOCALSTACK_ENDPOINT_URL, TOKEN_URL
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jwt import PyJWTError
+from sqlalchemy.orm import Session
+
+from shared.s3_client import S3Config, S3Interface
 
 router = APIRouter()
 
@@ -128,9 +128,9 @@ async def user_gets_presigned_url_and_saves_video_metadata(
 	channel = get_channel(db, request_body.channel_id)
 	if not channel:
 		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Channel not found')
-
 	try:
-		s3_client = S3Interface()
+		config = S3Config(localstack_endpoint_url=LOCALSTACK_ENDPOINT_URL, local=LOCAL)
+		s3_client = S3Interface(config)
 		object_key = generate_object_key(request_body)
 		presigned_url = s3_client.generate_presigned_url(AWS_S3_RAW_VIDEOS_BUCKET_NAME, object_key, 86400)
 		vid_metadata = VideoMetadata(**request_body.__dict__, raw_url=presigned_url)

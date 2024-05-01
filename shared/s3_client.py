@@ -1,15 +1,22 @@
+from typing import NamedTuple, Optional
+
 import boto3
 from botocore.exceptions import ClientError
-from env import LOCAL, LOCALSTACK_ENDPOINT_URL
 
+
+class S3Config(NamedTuple):
+	localstack_endpoint_url: Optional[str]
+	local: Optional[str]
 
 class S3Interface:
-	def __init__(self):
+	def __init__(self, config:S3Config):
+		self.local = config.local
+		self.localstack_endpoint_url = config.localstack_endpoint_url
 		self.s3_client = self._create_s3_client()
 
 	def _create_s3_client(self):
-		if LOCAL:
-			return boto3.client('s3', endpoint_url=LOCALSTACK_ENDPOINT_URL)
+		if self.local:
+			return boto3.client('s3', endpoint_url=self.localstack_endpoint_url)
 		return boto3.client('s3')
 
 	def generate_presigned_url(self, bucket_name, object_key, expiration):
@@ -82,4 +89,5 @@ class S3Interface:
 			uploaded_parts = self._upload_parts(bucket_name, file_obj, upload_id, object_key)
 			self._complete_multipart_upload(bucket_name, upload_id, object_key, uploaded_parts)
 		except ClientError as error:
+			raise error from None
 			raise error from None

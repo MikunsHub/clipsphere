@@ -1,6 +1,6 @@
 from typing import Any, Generator
 from sqlalchemy.orm.session import Session
-from database.constants import DATABASE_DRIVER
+from shared.database.constants import DATABASE_DRIVER
 from env import PG_USER, PG_PASSWORD, PG_HOST, PG_NAME, PG_PORT
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
